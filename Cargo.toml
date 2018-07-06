@@ -1,0 +1,12 @@
+[package]
+name = "metamint"
+version = "0.1.0"
+authors = ["rayleigh <rayleigh@pm.me>"]
+description = "Framework for blockchain software projects with PoW and PoS support."
+keywords = ["blockchain", "framework", "metamint", "p2p", "cryptocurrency", "proof-of-work", "proof-of-stake"]
+categories = ["cryptography", "database"]
+readme = "README.md"
+license= "MIT"
+
+[dependencies]
+serde = "1.0.64"
