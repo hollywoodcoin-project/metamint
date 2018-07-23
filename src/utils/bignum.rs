@@ -62,7 +62,7 @@ fn mul_u64_carry(a: u64, b: u64) -> (u64, u64) {
 	(result, carry)
 }
 
-/// Compares two big unsigned integers in big-endian format
+/// Compares two big unsigned integers in raw big-endian format
 fn bn_raw_cmp(a: &[u64], b: &[u64]) -> Ordering {
 	for i in (0..::std::cmp::max(a.len(), b.len())).rev() {
 		let r = item_or_zero(a, i).cmp(&item_or_zero(b, i));
@@ -115,11 +115,12 @@ macro_rules! bn_op {
 		for col in 0..$res_size {
 			// Add `carry` first, so we can use that variable
 			result[col] += carry;
+			carry = 0;
 
 			for row in 0..col + 1 {
 				// Calculate a * b with `carry`
 				let (r, c) = mul_u64_carry(item_or_zero($a, col - row), item_or_zero($b, row));
-				carry = c;
+				carry += c;
 
 				// Add multiply result to the result
 				let (ar, ao) = result[col].overflowing_add(r);
@@ -345,7 +346,7 @@ macro_rules! impl_bignum {
 					// qs = floor((U_(i+n)b + U_(i+n-1)) / V_(n-1))
 					// rs = (U_(i+n)b + U_(i+n-1)) mod V_(n-1)
 					// qs consist of only two digits
-					let (mut qs, mut rs) = bn_op!(short_div &[u[n + i - 1], u[n + i]], v[n - 1], 2);
+					let (mut qs, mut rs) = bn_op!(short_div &u[n + i - 1 .. n + i + 1], v[n - 1], 2);
 
 					// if qs = b or qs * V_(n-2) > b * rs + U_(n+i-2)
 					while bn_raw_cmp(&qs, &b) == Ordering::Equal || bn_raw_cmp(&bn_op!(mul &qs, &[v[n - 2]], $size), &[u[n + i - 2], rs]) == Ordering::Greater {
@@ -363,7 +364,7 @@ macro_rules! impl_bignum {
 					// qs * (V_(n-1) ... V_1 V_0)
 					let mul = bn_op!(mul &v, &qs, $size + 1);
 					// (U_(i+n) U_(i+n-1) ... U_i)
-					let ui = &mut u[i..n + i];
+					let ui = &mut u[i..n + i + 1];
 					// Is result of ui - mul negative
 					let negative = bn_raw_cmp(ui, &mul) == Ordering::Less;
 					// (U_(i+n) U_(i+n - 1) ... U_i) - qs * (V_(n-1) ... V_1 V_0)
