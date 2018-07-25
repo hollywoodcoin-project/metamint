@@ -109,25 +109,33 @@ macro_rules! bn_op {
 
 	// Long multiplication algorithm
 	(mul $a:expr, $b:expr, $res_size:expr) => {{
+		fn add_carry(r: &mut [u64], i: usize, c: u64) {
+			let mut overflow = true;
+			let (mut i, mut c) = (i, c);
+
+			while i < r.len() && overflow {
+				let (rt, o) = r[i].overflowing_add(c);
+				r[i] = rt;
+				if o { c = 1; }
+				overflow = o;
+				i += 1;
+			}
+		}
+
 		let mut result = [0u64; $res_size];
-		let mut carry = 0u64;
 
 		for col in 0..$res_size {
-			// Add `carry` first, so we can use that variable
-			result[col] += carry;
-			carry = 0;
-
 			for row in 0..col + 1 {
 				// Calculate a * b with `carry`
 				let (r, c) = mul_u64_carry(item_or_zero($a, col - row), item_or_zero($b, row));
-				carry += c;
+				add_carry(&mut result, col + 1, c);
 
 				// Add multiply result to the result
 				let (ar, ao) = result[col].overflowing_add(r);
 				result[col] = ar;
 
 				if ao {
-					carry += 1;
+					add_carry(&mut result, col + 1, 1);
 				}
 			}
 		}
