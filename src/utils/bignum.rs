@@ -339,8 +339,15 @@ macro_rules! impl_bignum {
 				// D1 (Normalize)
 
 				let b = [0, 1];
+
 				// d = floor((b-1) / V_(n-1))
-				let d = u64::max_value() / other.0[n - 1];
+				let halfb = u64::max_value() / 2 + 1;
+				let d = if other.0[n - 1] > halfb {
+					u64::max_value() / other.0[n - 1]
+				} else {
+					halfb / other.0[n - 1]
+				};
+
 				// (U_(m+n) U_(m+n-1) ... U_1 U_0) = (U_(m+n-1) ... U_1 U_0) * d
 				let mut u = bn_op!(mul &self.0, &[d], $size + 1);
 				// (V_(n-1) ... V_1 V_0) = (V_(n-1) ... V_1 V_0) * d
