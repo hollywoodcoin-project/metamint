@@ -10,7 +10,7 @@ fn test_zero() {
 
 #[test]
 fn test_max() {
-	assert_eq!(Uint256::max(), Uint256::from_raw([0xFFFFFFFFFFFFFFFF; 4]));
+	assert_eq!(Uint256::max(), Uint256::from_raw([0xffffffffffffffff; 4]));
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn test_partial_eq() {
 	// Big
 	let a = Uint256::from_raw([0xff98fdf13ceff45f, 0xf3bcc7f3f272feed, 0xff235feebdaedaaa, 0x7ffff3f6f1f600df]);
 	let b = Uint256::from_raw([0xff98fdf13ceff45f, 0xf3bcc7f3f272feed, 0xff235feebdaedaaa, 0x7ffff3f6f1f600df]);
-	let c = Uint256::from_raw([0x0b1fd4f71b3fb1ab, 0xe89d6c29e9ef895d, 0xcd3766c723dea6cc, 0x0000000000000000]);
+	let c = Uint256::from_raw([0x0b1fd4f71b3fb1ab, 0xe89d6c29e9ef895d, 0xcd3766c723dea6cc, 0]);
 
 	assert!(a == b);
 	assert!(a != c);
@@ -96,12 +96,10 @@ fn test_add() {
 	assert_eq!(Uint256::zero() + Uint256::from(1), Uint256::from(1));
 
 	// a + b = b + a
-	assert_eq!(
-		Uint256::from_raw([0x0b1fd4f71b3fb1ab, 0xe89d6c29e9ef895d, 0xcd3766c723dea6cc, 0])
-			+ Uint256::from_raw([0x9facd3f3eeff0071, 0, 0x71afd3f3feff0d71, 0]),
-		Uint256::from_raw([0x9facd3f3eeff0071, 0, 0x71afd3f3feff0d71, 0])
-			+ Uint256::from_raw([0x0b1fd4f71b3fb1ab, 0xe89d6c29e9ef895d, 0xcd3766c723dea6cc, 0])
-	);
+	assert_eq!(Uint256::from_raw([0x0b1fd4f71b3fb1ab, 0xe89d6c29e9ef895d, 0xcd3766c723dea6cc, 0])
+				   + Uint256::from_raw([0x9facd3f3eeff0071, 0, 0x71afd3f3feff0d71, 0]),
+			   Uint256::from_raw([0x9facd3f3eeff0071, 0, 0x71afd3f3feff0d71, 0])
+				   + Uint256::from_raw([0x0b1fd4f71b3fb1ab, 0xe89d6c29e9ef895d, 0xcd3766c723dea6cc, 0]));
 
 	// Overflow checks
 
@@ -113,21 +111,18 @@ fn test_add() {
 
 	// Partial overflow check
 	assert_eq!(
-		Uint256::from_raw([0, 0xFFFFFFFFFFFFFFFF, 1, 0]) + Uint256([0, 1, 0, 0]),
+		Uint256::from_raw([0, 0xffffffffffffffff, 1, 0]) + Uint256([0, 1, 0, 0]),
 		Uint256::from_raw([0, 0, 2, 0])
 	);
 
-	// Random
 	// 0x 162ebcd38c90b56f bff4b0210695afb4 71c944a6003cde34 bbf030a89c42b158
 	// +
 	// 0x 1089012beb484ddf 3612bdff9fcab867 6fed42c47bf00081 301220c079eedb8d
 	// =
 	// 0x 26b7bdff77d9034e f6076e20a660681b e1b6876a7c2cdeb5 ec02516916318ce5
-	assert_eq!(
-		Uint256::from_raw([0xbbf030a89c42b158, 0x71c944a6003cde34, 0xbff4b0210695afb4, 0x162ebcd38c90b56f])
-			+ Uint256::from_raw([0x301220c079eedb8d, 0x6fed42c47bf00081, 0x3612bdff9fcab867, 0x1089012beb484ddf]),
-		Uint256::from_raw([0xec02516916318ce5, 0xe1b6876a7c2cdeb5, 0xf6076e20a660681b, 0x26b7bdff77d9034e])
-	);
+	assert_eq!(Uint256::from_raw([0xbbf030a89c42b158, 0x71c944a6003cde34, 0xbff4b0210695afb4, 0x162ebcd38c90b56f])
+				   + Uint256::from_raw([0x301220c079eedb8d, 0x6fed42c47bf00081, 0x3612bdff9fcab867, 0x1089012beb484ddf]),
+			   Uint256::from_raw([0xec02516916318ce5, 0xe1b6876a7c2cdeb5, 0xf6076e20a660681b, 0x26b7bdff77d9034e]));
 }
 
 #[test]
@@ -153,25 +148,21 @@ fn test_sub() {
 	assert_eq!(Uint256::zero() - Uint256::from(2), Uint256::max() - Uint256::from(1));
 
 	// Partial overflow check
-	assert_eq!(Uint256([0, 1, 1, 0]) - Uint256([0, 2, 0, 0]), Uint256([0, u64::max_value(), 0, 0]));
+	assert_eq!(Uint256::from_raw([0, 1, 1, 0]) - Uint256::from_raw([0, 2, 0, 0]),
+			   Uint256::from_raw([0, 0xffffffffffffffff, 0, 0]));
 
 	// (2^256 - 1) - 2^255 = 7fffffffffffffff ffffffffffffffff ffffffffffffffff ffffffffffffffff
-	assert_eq!(
-		Uint256::max() - Uint256([0, 0, 0, 0x8000000000000000]),
-		Uint256([0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0x7fffffffffffffff])
-	);
+	assert_eq!(Uint256::max() - Uint256::from_raw([0, 0, 0, 0x8000000000000000]),
+			   Uint256([0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0x7fffffffffffffff]));
 
-	// Random
 	// 0x 162ebcd38c90b56f bff4b0210695afb4 71c944a6003cde34 bbf030a89c42b158
 	// -
 	// 0x 1089012beb484ddf 3612bdff9fcab867 6fed42c47bf00081 301220c079eedb8d
 	// =
 	// 0x 05a5bba7a1486790 89e1f22166caf74d 01dc01e1844cddb3 8bde0fe82253d5cb
-	assert_eq!(
-		Uint256::from_raw([0xbbf030a89c42b158, 0x71c944a6003cde34, 0xbff4b0210695afb4, 0x162ebcd38c90b56f])
-			- Uint256::from_raw([0x301220c079eedb8d, 0x6fed42c47bf00081, 0x3612bdff9fcab867, 0x1089012beb484ddf]),
-		Uint256::from_raw([0x8bde0fe82253d5cb, 0x01dc01e1844cddb3, 0x89e1f22166caf74d, 0x05a5bba7a1486790])
-	);
+	assert_eq!(Uint256::from_raw([0xbbf030a89c42b158, 0x71c944a6003cde34, 0xbff4b0210695afb4, 0x162ebcd38c90b56f])
+				   - Uint256::from_raw([0x301220c079eedb8d, 0x6fed42c47bf00081, 0x3612bdff9fcab867, 0x1089012beb484ddf]),
+			   Uint256::from_raw([0x8bde0fe82253d5cb, 0x01dc01e1844cddb3, 0x89e1f22166caf74d, 0x05a5bba7a1486790]));
 }
 
 #[test]
@@ -188,35 +179,22 @@ fn test_mul() {
 	// 1 * max = max
 	assert_eq!(Uint256::from(1) * Uint256::max(), Uint256::max());
 
-	// max(u64) * max(u64) = 0xFFFFFFFFFFFFFFFE 0000000000000001
-	assert_eq!(
-		Uint256::from(u64::max_value()) * Uint256::from(u64::max_value()),
-		Uint256([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0u64, 0u64])
-	);
+	// max(u64) * max(u64) = 0x fffffffffffffffe 0000000000000001
+	assert_eq!(Uint256::from(u64::max_value()) * Uint256::from(u64::max_value()),
+			   Uint256([1, 0xfffffffffffffffe, 0, 0]));
 
 	// a * b = b * a
-	assert_eq!(
-		Uint256::from(u64::max_value() / 2) * Uint256::from(u64::max_value()),
-		Uint256::from(u64::max_value()) * Uint256::from(u64::max_value() / 2)
-	);
+	assert_eq!(Uint256::from(u64::max_value() / 2) * Uint256::from(u64::max_value()),
+			   Uint256::from(u64::max_value()) * Uint256::from(u64::max_value() / 2));
 
-	let a = Uint256::from_raw([0xbbf030a89c42b158, 0x71c944a6003cde34, 0x010695afb4, 0]);
-	let b = Uint256::from_raw([0x301220c079eedb8d, 0x81, 0, 0]);
-
-	println!("a: {:?}", a);
-	println!("b: {:?}", b);
-
-	// Random
 	// 0x 010695afb4 71c944a6003cde34 bbf030a89c42b158
 	// *
 	// 0x 81 301220c079eedb8d
 	// =
 	// 0x 8482bc32fd a9bd6aa2e336b156 226dd34476752d65 6be7d85e9641f578
-	assert_eq!(
-		Uint256::from_raw([0xbbf030a89c42b158, 0x71c944a6003cde34, 0x010695afb4, 0])
-		* Uint256::from_raw([0x301220c079eedb8d, 0x81, 0, 0]),
-		Uint256::from_raw([0x6be7d85e9641f578, 0x226dd34476752d65, 0xa9bd6aa2e336b156, 0x8482bc32fd])
-	);
+	assert_eq!(Uint256::from_raw([0xbbf030a89c42b158, 0x71c944a6003cde34, 0x010695afb4, 0])
+				   * Uint256::from_raw([0x301220c079eedb8d, 0x81, 0, 0]),
+			   Uint256::from_raw([0x6be7d85e9641f578, 0x226dd34476752d65, 0xa9bd6aa2e336b156, 0x8482bc32fd]));
 }
 
 #[test]
@@ -225,8 +203,7 @@ fn test_short_div() {
 	assert_eq!(Uint256::zero() / 1, Uint256::zero());
 
 	// a / 1 = a
-	assert_eq!(Uint256([0x01, 0xFFFFFFFFFFFFFFFE, 0, 0]) / 1,
-			   Uint256([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0, 0]));
+	assert_eq!(Uint256::from_raw([1, 0xfffffffffffffffe, 0, 0]) / 1, Uint256::from_raw([1, 0xfffffffffffffffe, 0, 0]));
 
 	// a * 2 / 2 = a
 	assert_eq!(Uint256::from(u64::max_value()) * Uint256::from(2) / 2, Uint256::from(u64::max_value()));
@@ -236,47 +213,36 @@ fn test_short_div() {
 	// b: 17233868258737669948
 	assert_eq!(Uint256::from(9223372036854775807u64) / 17233868258737669948u64, Uint256::zero());
 
-	assert_eq!(
-		Uint256([18446744073709551615u64, 9223372036854775807u64, 0u64, 0u64])
-			/ 17233868258737669948u64,
-		Uint256::from(9872489501839302786u64)
-	);
+	assert_eq!(Uint256([18446744073709551615u64, 9223372036854775807u64, 0, 0]) / 17233868258737669948u64,
+			   Uint256::from(9872489501839302786u64));
 
 	// 0x 7fffffffffffffff ffffffffffffffff ffffffffffffffff ffffffffffffffff
 	// /
 	// 0x 301220c079eedb8d
 	// =
 	// 0x 2 a9a93a16a8441992 ff729502429ee73d d7736c4d797ceaf5
-	assert_eq!(
-		Uint256::from_raw([0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0x7fffffffffffffff])
-		/ 0x301220c079eedb8du64,
-		Uint256::from_raw([0xd7736c4d797ceaf5, 0xff729502429ee73d, 0xa9a93a16a8441992, 0x2])
-	);
+	assert_eq!(Uint256::from_raw([0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0x7fffffffffffffff])
+				   / 0x301220c079eedb8du64,
+			   Uint256::from_raw([0xd7736c4d797ceaf5, 0xff729502429ee73d, 0xa9a93a16a8441992, 0x2]));
 }
 
 #[test]
 fn test_long_div() {
-	// Should panic if division by 0
-//	let p = panic::catch_unwind(|| {
-//		Uint256::from(5) / Uint256::zero();
-//	});
-//	assert!(p.is_err());
-
 	// If divisor is one-digit, short division should be used
-	assert_eq!(Uint256([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0u64, 0u64]) / Uint256::from(1),
-			   Uint256([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0u64, 0u64]));
+	assert_eq!(Uint256::from_raw([1, 0xfffffffffffffffe, 0, 0]) / Uint256::from(1),
+			   Uint256::from_raw([1, 0xfffffffffffffffe, 0, 0]));
 
 	// a / a = 1
 	assert_eq!(
-		Uint256([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0u64, 0u64])
-			/ Uint256([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0u64, 0u64]),
+		Uint256::from_raw([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0u64, 0u64])
+			/ Uint256::from_raw([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0u64, 0u64]),
 		Uint256::from(1));
 
 	// max / max = 1
 	assert_eq!(Uint256::max() / Uint256::max(), Uint256::from(1));
 
 	// a / max = 0, where a != max
-	assert_eq!(Uint256([0x0000000000000001, 0xFFFFFFFFFFFFFFFE, 0u64, 0u64]) / Uint256::max(), Uint256::zero());
+	assert_eq!(Uint256::from_raw([1, 0xfffffffffffffffe, 0, 0]) / Uint256::max(), Uint256::zero());
 
 	// a / b = c
 
@@ -285,8 +251,8 @@ fn test_long_div() {
 	// 0x 0000000000000000 ef2affdf53f0473c ebdcf3dfd3572173 113cf3ffdfff0071
 	// equal to
 	// 0x 890220e52de7a082
-	assert_eq!(Uint256([0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0x7fffffffffffffff])
-				   / Uint256([0x113cf3ffdfff0071, 0xebdcf3dfd3572173, 0xef2affdf53f0473c, 0x0000000000000000]),
+	assert_eq!(Uint256::from_raw([0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0x7fffffffffffffff])
+				   / Uint256::from_raw([0x113cf3ffdfff0071, 0xebdcf3dfd3572173, 0xef2affdf53f0473c, 0]),
 			   Uint256::from(0x890220e52de7a082u64));
 
 	// 0x 7ffff3f6f1f600df ff235feebdaedaaa f3bcc7f3f272feed ff98fdf13ceff45f
@@ -294,9 +260,9 @@ fn test_long_div() {
 	// 0x 9facd3f3eeff0071
 	// equal to
 	// 0x cd3766c723dea6cc e89d6c29e9ef895d 0b1fd4f71b3fb1ab
-	assert_eq!(Uint256([0xff98fdf13ceff45f, 0xf3bcc7f3f272feed, 0xff235feebdaedaaa, 0x7ffff3f6f1f600df])
-				   / Uint256([0x9facd3f3eeff0071, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000]),
-			   Uint256([0x0b1fd4f71b3fb1ab, 0xe89d6c29e9ef895d, 0xcd3766c723dea6cc, 0x0000000000000000]));
+	assert_eq!(Uint256::from_raw([0xff98fdf13ceff45f, 0xf3bcc7f3f272feed, 0xff235feebdaedaaa, 0x7ffff3f6f1f600df])
+				   / Uint256::from_raw([0x9facd3f3eeff0071, 0, 0, 0]),
+			   Uint256::from_raw([0x0b1fd4f71b3fb1ab, 0xe89d6c29e9ef895d, 0xcd3766c723dea6cc, 0]));
 
 	// 0x 7ffff3f6f1f600df ff235feebdaedaaa f3bcc7f3f272feed ff98fdf13ceff45f
 	// /
