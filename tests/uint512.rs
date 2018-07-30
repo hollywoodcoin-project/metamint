@@ -1,6 +1,6 @@
 extern crate metamint;
 
-use metamint::utils::bignum::{Uint512, Uint256, Zero};
+use metamint::utils::bignum::{Uint512, Uint256, Zero, One};
 
 #[test]
 fn test_zero() {
@@ -9,6 +9,15 @@ fn test_zero() {
 
 	assert!(Uint512::from_raw([0; 8]).is_zero());
 	assert!(!Uint512::from_raw([1, 2, 3, 4, 5, 6, 7, 8]).is_zero());
+}
+
+#[test]
+fn test_one() {
+	assert_eq!(Uint512::one(), Uint512::from_raw([1, 0, 0, 0, 0, 0, 0, 0]));
+	assert_ne!(Uint512::one(), Uint512::from_raw([1; 8]));
+
+	assert!(Uint512::from_raw([1, 0, 0, 0, 0, 0, 0, 0]).is_one());
+	assert!(!Uint512::from_raw([1, 2, 3, 4, 5, 6, 7, 8]).is_one());
 }
 
 #[test]
