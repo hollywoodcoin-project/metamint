@@ -6,6 +6,9 @@ use metamint::utils::bignum::{Uint512, Uint256, Zero};
 fn test_zero() {
 	assert_eq!(Uint256::zero(), Uint256::from_raw([0; 4]));
 	assert_ne!(Uint256::zero(), Uint256::from_raw([1; 4]));
+
+	assert!(Uint256::from_raw([0; 4]).is_zero());
+	assert!(!Uint256::from_raw([1, 2, 3, 4]).is_zero());
 }
 
 #[test]
