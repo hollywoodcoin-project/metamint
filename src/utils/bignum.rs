@@ -438,6 +438,26 @@ macro_rules! impl_bignum {
 				false
 			}
 		}
+
+		impl One for $name {
+			fn one() -> Self {
+				let mut r = $name::zero();
+				r.0[0] = 1;
+				r
+			}
+
+			fn is_one(&self) -> bool {
+				if self.0[0] == 1 {
+					for i in 1..$size {
+						if self.0[i] != 0 {
+							return false;
+						}
+					}
+				}
+
+				true
+			}
+		}
 	}
 }
 
