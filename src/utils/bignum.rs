@@ -168,6 +168,7 @@ macro_rules! bn_op {
 
 macro_rules! impl_bignum {
 	($name:ident, $size:expr) => {
+		// TODO: make this constructor private when `const fn` feature will be stable
 		#[derive(Clone, Copy)]
 		pub struct $name(pub [u64; $size]);
 
