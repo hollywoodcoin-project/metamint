@@ -1,6 +1,6 @@
 use std::fmt;
 use std::str::FromStr;
-use std::ops::{Add, Sub, Mul, Div};
+use std::ops::{Add, Sub, Mul, Div, Neg};
 use std::cmp::Ordering;
 
 /// Zero.
@@ -461,6 +461,157 @@ macro_rules! impl_bignum {
 	}
 }
 
+macro_rules! sign_wrap {
+	($name:ident, $base:ident) => {
+		#[derive(Eq, Clone, Copy)]
+		pub struct $name {
+			num: $base,
+			positive: bool
+		}
+
+		impl $name {
+			pub fn positive(&self) -> bool {
+				self.positive
+			}
+
+			pub fn negative(&self) -> bool {
+				!self.positive
+			}
+
+			pub fn from_raw(num: $base, positive: bool) -> Self {
+				$name {num, positive}
+			}
+		}
+
+		impl fmt::Debug for $name {
+			fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+				write!(f, "{}{:?}", if self.positive() { "" } else { "-" }, self.num)?;
+				Ok(())
+			}
+		}
+
+		impl From<$base> for $name {
+			fn from(n: $base) -> Self {
+				Self::from_raw(n, true)
+			}
+		}
+
+		impl From<u64> for $name {
+			fn from(num: u64) -> Self {
+				Self::from_raw($base::from(num), true)
+			}
+		}
+
+		impl From<i64> for $name {
+			fn from(num: i64) -> Self {
+				Self::from_raw($base::from(num.abs() as u32), num >= 0)
+			}
+		}
+
+		impl From<u32> for $name {
+			fn from(num: u32) -> Self { Self::from(num as u64) }
+		}
+
+		impl From<i32> for $name {
+			fn from(num: i32) -> Self { Self::from(num as i64) }
+		}
+
+		impl Neg for $name {
+			type Output = Self;
+			fn neg(self) -> Self {
+				Self::from_raw(self.num, !self.positive)
+			}
+		}
+
+		impl PartialEq for $name {
+			fn eq(&self, other: &Self) -> bool {
+				self.positive == other.positive && self.num.eq(&other.num)
+			}
+		}
+
+		impl PartialOrd for $name {
+			fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+		}
+
+		impl Ord for $name {
+			fn cmp(&self, other: &Self) -> Ordering {
+				use self::Ordering::*;
+
+				let a_is_zero = self.num.is_zero();
+
+				// a != 0 and sign(a) != sign(b)
+				// We do this step first because we dont need to compare actual numbers, only signs
+				if !a_is_zero && self.positive() != other.positive() {
+					return if self.positive() { Greater } else { Less }
+				}
+
+				let num_ord = self.num.cmp(&other.num);
+
+				// a = 0
+				if a_is_zero {
+					return if num_ord == Equal { num_ord } else { if other.positive() { Less } else { Greater } };
+				}
+
+				// sign(a) == sign(b)
+				if num_ord == Equal || self.positive() { num_ord } else { num_ord.reverse() }
+			}
+		}
+
+		impl Add for $name {
+			type Output = Self;
+			fn add(self, other: Self) -> Self {
+				// a = 0
+				if self.num.is_zero() {
+					return if other.num.is_zero() { Self::zero() } else { other };
+				}
+
+				// sign(a) = sign(b)
+				if self.positive() == other.positive() {
+					return Self::from_raw(self.num + other.num, self.positive());
+				}
+
+				// sign(a) != sign(b)
+				if self.num < other.num {
+					Self::from_raw(other.num - self.num, other.positive())
+				} else {
+					Self::from_raw(self.num - other.num, self.positive())
+				}
+			}
+		}
+
+		impl Sub for $name {
+			type Output = Self;
+			fn sub(self, other: Self) -> Self {
+				self + -other
+			}
+		}
+
+		impl Mul for $name {
+			type Output = Self;
+			fn mul(self, other: Self) -> Self {
+				Self::from_raw(self.num * other.num, self.positive() == other.positive())
+			}
+		}
+
+		impl Div for $name {
+			type Output = Self;
+			fn div(self, other: Self) -> Self {
+				Self::from_raw(self.num / other.num, self.positive() == other.positive())
+			}
+		}
+
+		impl Zero for $name {
+			fn zero() -> Self {
+				Self::from_raw($base::zero(), true)
+			}
+
+			fn is_zero(&self) -> bool {
+				self.num.is_zero()
+			}
+		}
+	}
+}
+
 /// Number of the `u64` digits of the `Uint256`.
 const U256_SIZE: usize = 4;
 
@@ -469,6 +620,7 @@ const U512_SIZE: usize = 8;
 
 impl_bignum!(Uint256, U256_SIZE);
 impl_bignum!(Uint512, U512_SIZE);
+sign_wrap!(Int512, Uint512);
 
 impl From<Uint256> for Uint512 {
 	fn from(n: Uint256) -> Self {
