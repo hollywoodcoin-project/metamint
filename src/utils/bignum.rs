@@ -431,12 +431,12 @@ macro_rules! impl_bignum {
 
 			fn is_zero(&self) -> bool {
 				for part in self.0.iter() {
-					if *part == 0u64 {
-						return true;
+					if *part != 0u64 {
+						return false;
 					}
 				}
 
-				false
+				true
 			}
 		}
 
