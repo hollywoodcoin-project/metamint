@@ -214,6 +214,16 @@ macro_rules! impl_bignum {
 
 				1
 			}
+
+			/// Returns `true` if number is odd.
+			pub fn is_odd(&self) -> bool {
+				self.0[0] & 1 == 1
+			}
+
+			/// Returns `true` if number is even.
+			pub fn is_even(&self) -> bool {
+				self.0[0] & 1 == 0
+			}
 		}
 
 		impl Default for $name {
@@ -431,7 +441,7 @@ macro_rules! impl_bignum {
 
 			fn is_zero(&self) -> bool {
 				for part in self.0.iter() {
-					if *part != 0u64 {
+					if *part != 0 {
 						return false;
 					}
 				}
