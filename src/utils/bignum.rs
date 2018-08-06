@@ -497,6 +497,16 @@ macro_rules! sign_wrap {
 			}
 		}
 
+		impl From<$name> for $base {
+			fn from(n: $name) -> $base {
+				if n.negative() {
+					panic!("Value should be positive.");
+				}
+
+				n.num
+			}
+		}
+
 		impl From<u64> for $name {
 			fn from(num: u64) -> Self {
 				Self::from_raw($base::from(num), true)
