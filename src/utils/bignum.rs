@@ -526,7 +526,7 @@ macro_rules! sign_wrap {
 
 		impl PartialEq for $name {
 			fn eq(&self, other: &Self) -> bool {
-				self.positive == other.positive && self.num.eq(&other.num)
+				self.num.is_zero() && other.num.is_zero() || self.positive == other.positive && self.num.eq(&other.num)
 			}
 		}
 
