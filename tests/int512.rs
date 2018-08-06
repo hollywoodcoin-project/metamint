@@ -46,6 +46,13 @@ fn test_ord() {
 
 	assert!(a > zero);
 	assert!(c < zero);
+
+	assert!(!(zero > Int512::zero()));
+	assert!(!(zero < Int512::zero()));
+
+	assert!(!(Int512::from(1) < Int512::zero()));
+	assert!(Int512::from(1) > Int512::zero());
+	assert!(Int512::zero() < Int512::from(1));
 }
 
 #[test]
