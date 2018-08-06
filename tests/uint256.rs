@@ -26,6 +26,24 @@ fn test_max() {
 }
 
 #[test]
+fn test_is_odd() {
+	assert!(!Uint256::from(0).is_odd());
+	assert!(Uint256::from(1).is_odd());
+	assert!(!Uint256::from(2).is_odd());
+	assert!(Uint256::from(467).is_odd());
+	assert!(!Uint256::from(954).is_odd());
+}
+
+#[test]
+fn test_is_even() {
+	assert!(Uint256::from(0).is_even());
+	assert!(!Uint256::from(1).is_even());
+	assert!(Uint256::from(2).is_even());
+	assert!(!Uint256::from(753).is_even());
+	assert!(Uint256::from(1024).is_even());
+}
+
+#[test]
 fn test_partial_eq() {
 	// max = max
 	assert!(Uint256::max() == Uint256::max());
