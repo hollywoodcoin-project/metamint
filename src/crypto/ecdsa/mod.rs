@@ -80,6 +80,10 @@ fn clock_mul(a: &Uint256, b: &Uint256, p: &Uint256) -> Uint256 {
 	Uint256::from(res)
 }
 
+fn clock_square(a: &Uint256, p: &Uint256) -> Uint256 {
+	clock_mul(a, a, p)
+}
+
 fn clock_div(a: &Uint256, b: &Uint256, p: &Uint256) -> Uint256 {
 	// Cast `p`
 	let p_i = Int512::from(Uint512::from(*p));
@@ -147,12 +151,12 @@ impl<'a> ECPoint<'a> {
 		let (x, y) = (self.x, self.y);
 
 		// Calc `X`
-		let xp2 = clock_mul(&x, &x, p);						// x^2
+		let xp2 = clock_square(&x, p);						// x^2
 		let xp2m3 = clock_mul(&xp2, &Uint256::from(3), p);	// 3x^2
 		let xaa = clock_add(&xp2m3, &a, p);					// 3x^2 + a
 		let ym2 = clock_mul(&y, &Uint256::from(2), p);		// 2y
 		let div = clock_div(&xaa, &ym2, p);					// (3x^2 + a) / 2y
-		let divp2 = clock_mul(&div, &div, p);				// ((3x^2 + a) / 2y)^2
+		let divp2 = clock_square(&div, p);					// ((3x^2 + a) / 2y)^2
 		let xm2 = clock_mul(&x, &Uint256::from(2), p);		// 2x
 		res.x = clock_sub(&divp2, &xm2, p);					// ((3x^2 + a) / 2y)^2 - 2x
 
@@ -191,7 +195,7 @@ impl<'a> Add for ECPoint<'a> {
 		let y2sy1 = clock_sub(&y2, &y1, p);			// y_2 - y_1
 		let x2sx1 = clock_sub(&x2, &x1, p); 		// x_2 - x_1
 		let div = clock_div(&y2sy1, &x2sx1, p);		// (y_2 - y_1) / (x_2 - x_1)
-		let dp2 = clock_mul(&div, &div, p);			// ((y_2 - y_1) / (x_2 - x_1))^2
+		let dp2 = clock_square(&div, p);			// ((y_2 - y_1) / (x_2 - x_1))^2
 		let dp2sx1 = clock_sub(&dp2, &x1, p);		// ((y_2 - y_1) / (x_2 - x_1))^2 - x_1
 		res.x = clock_sub(&dp2sx1, &x2, p);			// ((y_2 - y_1) / (x_2 - x_1))^2 - x_1 - x_2
 
